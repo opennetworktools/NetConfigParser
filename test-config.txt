@@ -1,0 +1,105 @@
+! Sample Cisco IOS-XE Router Running Configuration with BGP, Policy Map, Route Map, and Loopbacks
+version 17.3
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname Router-XE
+!
+boot-start-marker
+boot-end-marker
+!
+no aaa new-model
+!
+ip cef
+no ip domain lookup
+!
+ip name-server 8.8.8.8
+ip name-server 8.8.4.4
+!
+interface GigabitEthernet0/0/0
+ description WAN Connection
+ ip address 203.0.113.1 255.255.255.252
+ ip nat outside
+ ip virtual-reassembly in
+ no shutdown
+!
+interface GigabitEthernet0/0/1
+ description LAN Connection
+ ip address 192.168.1.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly in
+ no shutdown
+!
+interface Loopback0
+ description BGP Loopback
+ ip address 10.1.1.1 255.255.255.255
+!
+interface Loopback1
+ description Management Loopback
+ ip address 10.2.2.2 255.255.255.255
+!
+ip nat inside source list NAT_ACL interface GigabitEthernet0/0/0 overload
+!
+ip access-list standard NAT_ACL
+ permit 192.168.1.0 0.0.0.255
+!
+ip access-list extended BGP_INBOUND_FILTER
+ permit ip 10.0.0.0 0.255.255.255 any
+ deny ip any any
+!
+route-map BGP_IN_POLICY permit 10
+ match ip address BGP_INBOUND_FILTER
+ set local-preference 200
+!
+route-map BGP_OUT_POLICY permit 10
+ set as-path prepend 65001 65001
+!
+router ospf 1
+ router-id 1.1.1.1
+ network 192.168.1.0 0.0.0.255 area 0
+ network 203.0.113.0 0.0.0.3 area 0
+ network 10.1.1.1 0.0.0.0 area 0
+!
+router bgp 65001
+ bgp log-neighbor-changes
+ neighbor 10.1.1.2 remote-as 65002
+ neighbor 10.1.1.2 description BGP Neighbor - AS 65002
+ neighbor 10.1.1.2 update-source Loopback0
+ neighbor 10.1.1.2 route-map BGP_IN_POLICY in
+ neighbor 10.1.1.2 route-map BGP_OUT_POLICY out
+ !
+ address-family ipv4
+  neighbor 10.1.1.2 activate
+  network 192.168.1.0 mask 255.255.255.0
+  network 203.0.113.0 mask 255.255.255.252
+ exit-address-family
+!
+ip route 0.0.0.0 0.0.0.0 GigabitEthernet0/0/0
+!
+! Policy Map for QoS
+policy-map POLICY_QOS
+ class class-default
+  fair-queue
+  random-detect
+!
+! Class Map (optional for specific traffic matching)
+class-map match-all CLASS_MATCH_ALL
+ match access-group name BGP_INBOUND_FILTER
+!
+line con 0
+ exec-timeout 10 0
+ logging synchronous
+ password cisco
+ login
+!
+line vty 0 4
+ login local
+ transport input ssh
+!
+username admin secret 5 $1$MwSt$tHPTH.kf7jWAwb.56w7qE/
+!
+ip ssh version 2
+crypto key generate rsa modulus 2048
+!
+end
