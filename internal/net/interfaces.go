@@ -1,4 +1,4 @@
-package main
+package net
 
 type Interface struct {
 	InterfaceType string

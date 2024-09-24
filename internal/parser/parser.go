@@ -1,9 +1,11 @@
-package main
+package parser
 
 import (
 	"fmt"
 	"io/ioutil"
 	"regexp"
+
+	"github.com/roopeshsn/NetConfigParser/internal/net"
 )
 
 type Parser struct {
@@ -12,8 +14,8 @@ type Parser struct {
 }
 
 type Configs struct {
-	BGP        BGP
-	Interfaces Interfaces
+	BGP        net.BGP
+	Interfaces net.Interfaces
 }
 
 func NewParser(filePath string) *Parser {
@@ -38,7 +40,7 @@ func (p *Parser) ParseConfig() error {
 	// BGP block
 	reBGP := regexp.MustCompile(`(?s)router bgp.*?!\n`)
 	bgpBlock := reBGP.FindString(configString)
-	bgp_object := ParseBGPBlock(bgpBlock)
+	bgp_object := net.ParseBGPBlock(bgpBlock)
 	configs.BGP = bgp_object
 	p.Configs = configs
 

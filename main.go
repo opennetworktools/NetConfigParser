@@ -1,8 +1,12 @@
 package main
 
+import (
+	"github.com/roopeshsn/NetConfigParser/internal/parser"
+)
+
 func main() {
 	path := "running-config-1.txt" // Path to config file
-	parser := NewParser(path)
+	parser := parser.NewParser(path)
 	parser.ParseConfig()
 	// fmt.Println(parser)
 	// fmt.Printf("%+v\n", parser)
