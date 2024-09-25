@@ -1,9 +1,11 @@
 package parser
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"regexp"
+	"strings"
 
 	"github.com/opennetworktools/NetConfigParser/internal/net"
 )
@@ -44,34 +46,53 @@ func (p *Parser) ParseConfig() error {
 	configs.BGP = bgp_object
 	p.Configs = configs
 
-	// All Interfaces block
-	// reInterface := regexp.MustCompile(`(?s)(interface .+?)(?=^!|$)`)
-	// reInterface := regexp.MustCompile(`(?m)^interface \S+`)
-	reInterface := regexp.MustCompile(`^interface`)
-	matches := reInterface.FindAllString(configString, -1)
-	fmt.Println(matches)
-
-	// var blocks []string
-	// for i, match := range matches {
-	// 	start := match[0]
-	// 	var end int
-	// 	if i+1 < len(matches) {
-	// 		end = match[1][0]
-	// 	} else {
-	// 		end = len(configString)
-	// 	}
-	// 	blocks = append(blocks, strings.TrimSpace(configString[start:end]))
-	// }
-
-	for i, match := range matches {
-		fmt.Println(i)
-		fmt.Println(match)
-		// fmt.Println("!")
+	// InterfacesBlock
+	regexInterface := `^\s*interface .+$`
+	reInterface := regexp.MustCompile(regexInterface)
+	interfacesBlock, err := extractBlock(configString, reInterface)
+	if err != nil {
+		fmt.Println("Error extracting interfaces block:", err)
+		return err
 	}
+	interfacesObj := net.ParseInterfacesBlock(interfacesBlock)
+	// fmt.Println(interfacesObj)
+	configs.Interfaces = interfacesObj
 
-	// fmt.Println(blocks)
+	// Set configs to parser object
+	p.Configs = configs
 
 	return nil
+}
+
+func extractBlock(s string, re *regexp.Regexp) ([]string, error) {
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	var block, blocks []string
+	for scanner.Scan() {
+		line := scanner.Text()
+		if block == nil && re.MatchString(line) {
+			block = append(block, line)
+		} else if block != nil && strings.HasPrefix(line, " ") {
+			block = append(block, line)
+		} else if block != nil && re.MatchString(line) {
+			blocks = append(blocks, strings.Join(block, "\n"))
+			block = nil
+			block = append(block, line)
+		} else if block != nil && !strings.HasPrefix(line, " ") {
+			blocks = append(blocks, strings.Join(block, "\n"))
+			block = nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return blocks, nil
+}
+
+func PrettyPrint(arr []string) {
+	for i, item := range arr {
+		fmt.Println(i)
+		fmt.Println(item)
+	}
 }
 
 // func (p Parser) ParseConfig() error {
