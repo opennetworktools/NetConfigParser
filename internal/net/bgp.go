@@ -2,6 +2,7 @@ package net
 
 import (
 	"bufio"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -19,6 +20,7 @@ type BGPNeighbor struct {
 }
 
 func ParseBGPBlock(block string) BGP {
+	fmt.Println("Parsing BGP...")
 	scanner := bufio.NewScanner(strings.NewReader(block))
 
 	// Regular expressions to match different BGP details
