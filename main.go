@@ -1,32 +1,23 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/opennetworktools/NetConfigParser/internal/parser"
+	"github.com/opennetworktools/NetConfigParser/internal/utils"
 )
 
 func main() {
 	path := "tests/configs/running-config-1.txt" // Path to config file
 	parser := parser.NewParser(path)
 	parser.ParseConfig()
-	// fmt.Println(parser)
+
+	// preety-print
 	// fmt.Printf("%+v\n", parser)
+
+	err := utils.WriteParserStructToJSON(parser, "out/parser.json")
+	if err != nil {
+		fmt.Println("Error creating JSON file:", err)
+	}
+	fmt.Println("Parser saved as JSON to parser.json")
 }
-
-// func (p Parser) ParseConfig() error {
-// 	fmt.Println("Parsing configs...")
-// 	file, err := os.Open(p.FilePath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
-
-// 	scanner := bufio.NewScanner(file)
-// 	for scanner.Scan() {
-// 		line := scanner.Text()
-// 		if matches := reBGP.FindStringSubmatch(line); matches != nil {
-// 			for i, e := range matches {
-// 				fmt.Printf("%v, %v \n", i, e)
-// 			}
-// 		}
-// 	}
-// }

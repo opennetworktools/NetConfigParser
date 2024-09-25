@@ -73,3 +73,22 @@ func (p *Parser) ParseConfig() error {
 
 	return nil
 }
+
+// func (p Parser) ParseConfig() error {
+// 	fmt.Println("Parsing configs...")
+// 	file, err := os.Open(p.FilePath)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer file.Close()
+
+// 	scanner := bufio.NewScanner(file)
+// 	for scanner.Scan() {
+// 		line := scanner.Text()
+// 		if matches := reBGP.FindStringSubmatch(line); matches != nil {
+// 			for i, e := range matches {
+// 				fmt.Printf("%v, %v \n", i, e)
+// 			}
+// 		}
+// 	}
+// }
