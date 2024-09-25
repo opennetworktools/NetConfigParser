@@ -1,3 +1,3 @@
-module github.com/roopeshsn/NetConfigParser
+module github.com/opennetworktools/NetConfigParser
 
 go 1.21.3

@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"regexp"
 
-	"github.com/roopeshsn/NetConfigParser/internal/net"
+	"github.com/opennetworktools/NetConfigParser/internal/net"
 )
 
 type Parser struct {

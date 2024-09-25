@@ -2,7 +2,9 @@
 
 NetConfigParser is a tool that parses your network device's startup or running configurations.
 
-## TODO:
+## Design
+
+### TODO:
 
 1. Extract all the features from the running configs as an array of strings
 2. Implement parsing logic for,
