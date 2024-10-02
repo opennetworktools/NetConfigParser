@@ -11,6 +11,7 @@ type Interface struct {
 	IP            string
 	Subnet        string
 	IsShutdown    bool
+	ACL 		  []ACL
 }
 
 type Interfaces struct {
@@ -19,6 +20,11 @@ type Interfaces struct {
 	PortChannel        []Interface
 	Loopback           []Interface
 	Tunnel             []Interface
+}
+
+type ACL struct {
+	Name 	  string
+	Direction string
 }
 
 func ParseInterfacesBlock(blocks []string) Interfaces {
@@ -96,6 +102,8 @@ func ParseInterfacesBlock(blocks []string) Interfaces {
 }
 
 func parseInterfaceString(config string, interfaceType string) Interface {
+	interfaceObj := Interface{ACL: make([]ACL, 0)}
+	
 	// Extract IPv4 address and subnet
 	regexIPv4 := `\bip\s+address\s+((?:\d{1,3}\.){3}\d{1,3})\s+((?:\d{1,3}\.){3}\d{1,3})\b`
 	ipv4Regex := regexp.MustCompile(regexIPv4)
@@ -125,13 +133,24 @@ func parseInterfaceString(config string, interfaceType string) Interface {
 		description = reDescription[1]
 	}
 
-	interfaceObj := Interface{
-		InterfaceType: interfaceType,
-		Description:   description,
-		IP:            ipv4Addr,
-		Subnet:        ipv4Subnet,
-		IsShutdown:    isShutdown,
+	// ACL
+	acl := ACL{}
+	regexAccessGroup := regexp.MustCompile(`ip access-group\s+(\S+)\s+(in|out)`)
+	accessGroupMatch := regexAccessGroup.FindStringSubmatch(config)
+
+	if accessGroupMatch != nil {
+		acl.Name = accessGroupMatch[1]
+		acl.Direction = accessGroupMatch[2]
+		interfaceObj.ACL = append(interfaceObj.ACL, acl)
+	} else {
+		fmt.Println("No ip access-group match found")
 	}
+
+	interfaceObj.InterfaceType = interfaceType
+	interfaceObj.Description = description
+	interfaceObj.IP = ipv4Addr
+	interfaceObj.Subnet = ipv4Subnet
+	interfaceObj.IsShutdown = isShutdown
 
 	return interfaceObj
 }

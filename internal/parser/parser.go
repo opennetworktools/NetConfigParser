@@ -16,9 +16,10 @@ type Parser struct {
 }
 
 type Configs struct {
-	BGP        net.BGP
-	Interfaces net.Interfaces
-	RouteMaps   []net.RouteMap
+	BGP           net.BGP
+	Interfaces    net.Interfaces
+	RouteMaps     []net.RouteMap
+	IPAccessLists []net.AccessList
 }
 
 func NewParser(filePath string) *Parser {
@@ -56,7 +57,6 @@ func (p *Parser) ParseConfig() error {
 		return err
 	}
 	interfacesObj := net.ParseInterfacesBlock(interfacesBlock)
-	// fmt.Println(interfacesObj)
 	configs.Interfaces = interfacesObj
 
 	// Route-map
@@ -69,6 +69,17 @@ func (p *Parser) ParseConfig() error {
 	}
 	routeMapsObj := net.ParseRouteMapBlock(routeMapsBlock)
 	configs.RouteMaps = routeMapsObj
+
+	// IP Access-list
+	regexIPAccessList := `^\s*ip access-list .+$`
+	reIPAccessList := regexp.MustCompile(regexIPAccessList)
+	IPAccessListsBlock, err := extractBlock(configString, reIPAccessList)
+	if err != nil {
+		fmt.Println("Error extracting ip access-list block:", err)
+		return err
+	}
+	IPAccessListObj := net.ParseIPAccessListBlock(IPAccessListsBlock)
+	configs.IPAccessLists = IPAccessListObj
 
 	// Set configs to parser object
 	p.Configs = configs
