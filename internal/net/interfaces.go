@@ -143,7 +143,7 @@ func parseInterfaceString(config string, interfaceType string) Interface {
 		acl.Direction = accessGroupMatch[2]
 		interfaceObj.ACL = append(interfaceObj.ACL, acl)
 	} else {
-		fmt.Println("No ip access-group match found")
+		// fmt.Println("No ip access-group match found")
 	}
 
 	interfaceObj.InterfaceType = interfaceType

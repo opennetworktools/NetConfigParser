@@ -29,6 +29,18 @@ type ACLRule struct {
     Port     string
 }
 
+type PrefixList struct {
+    Name string
+    Rules []PrefixListRule
+}
+
+type PrefixListRule struct {
+    SequenceNumber string
+    Action string
+    IP     string
+    Mask   string
+}
+
 func ParseRouteMapBlock(blocks []string) []RouteMap {
 	fmt.Println("Parsing Route-map block...")
 	routeMaps := []RouteMap{}
@@ -37,7 +49,7 @@ func ParseRouteMapBlock(blocks []string) []RouteMap {
 		reRouteMap := regexp.MustCompile(regexRouteMap)
 		routeMapMatch := reRouteMap.FindStringSubmatch(block)
 		// TODO
-		// extract match and set rules
+		// 1. extract match and set rules
 		// initially extract the prefix list in the "match ip address" statement
 		// regexMatchIP := `^match\s+ip\s+address\s+prefix-list\s+(\S+)$`
 		// reMatchIP := regexp.MustCompile(regexMatchIP)
@@ -46,6 +58,8 @@ func ParseRouteMapBlock(blocks []string) []RouteMap {
 		// routeMapMatch[1] - name of the route-map
 		// routeMapMatch[2] - action (permit or deny)
 		// routeMapMatch[3] - sequence number
+
+        // 2. extract prefix-list information
 		routeMapObj := RouteMap{
 			Name:     routeMapMatch[1],
 			Action:   routeMapMatch[2],
@@ -60,6 +74,7 @@ func ParseIPAccessListBlock(blocks []string) []AccessList {
     fmt.Println("Parsing IP Access-list block...")
     accessLists := []AccessList{}
     for _, block := range blocks {
+        // fmt.Printf("%v, %v \n", i, block)
         regexIPAccessList := `ip\s+access-list\s+(standard|extended)\s+(\S+)`
         reAccessList := regexp.MustCompile(regexIPAccessList)
         accessListMatch := reAccessList.FindStringSubmatch(block)
@@ -111,4 +126,44 @@ func ParseIPAccessListBlock(blocks []string) []AccessList {
         accessLists = append(accessLists, accessListObj)
     }
     return accessLists
+}
+
+func ParseIPPrefixListBlock(blocks []string) []PrefixList {
+    fmt.Println("Parsing IP Prefix-list block...")
+    prefixLists := []PrefixList{}
+    for _, block := range blocks {
+        // fmt.Printf("%v, %v \n", i, block)
+
+        regexIPPrefixList := `ip prefix-list (\S+) seq (\d+) (permit|deny) (\d{1,3}(?:\.\d{1,3}){3})\/(\d{1,2})`
+        rePrefixList := regexp.MustCompile(regexIPPrefixList)
+        prefixListMatches := rePrefixList.FindAllStringSubmatch(block, -1)
+
+        prefixListObj := PrefixList{
+            Name:  "",
+            Rules: make([]PrefixListRule, 0),
+        }
+
+        for i, match := range prefixListMatches {
+            name := match[1]
+            sequenceNumber := match[2]
+            action := match[3]
+            IPAddress := match[4]
+            subnetMask := match[5]
+
+            if i == 0 {
+                prefixListObj.Name = name
+            }
+
+            prefixListRuleObj := PrefixListRule{
+                SequenceNumber: sequenceNumber,
+                Action: action,
+                IP: IPAddress,
+                Mask: subnetMask,
+            }
+            prefixListObj.Rules = append(prefixListObj.Rules, prefixListRuleObj)
+        }
+
+        prefixLists = append(prefixLists, prefixListObj)
+    }
+    return prefixLists
 }

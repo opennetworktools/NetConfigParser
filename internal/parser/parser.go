@@ -20,6 +20,7 @@ type Configs struct {
 	Interfaces    net.Interfaces
 	RouteMaps     []net.RouteMap
 	IPAccessLists []net.AccessList
+	IPPrefixLists []net.PrefixList
 }
 
 func NewParser(filePath string) *Parser {
@@ -51,7 +52,7 @@ func (p *Parser) ParseConfig() error {
 	// InterfacesBlock
 	regexInterface := `^\s*interface .+$`
 	reInterface := regexp.MustCompile(regexInterface)
-	interfacesBlock, err := extractBlock(configString, reInterface)
+	interfacesBlock, err := extractBlock(configString, reInterface, "OTHER")
 	if err != nil {
 		fmt.Println("Error extracting interfaces block:", err)
 		return err
@@ -62,7 +63,7 @@ func (p *Parser) ParseConfig() error {
 	// Route-map
 	regexRouteMap := `^\s*route-map .+$`
 	reRouteMap := regexp.MustCompile(regexRouteMap)
-	routeMapsBlock, err := extractBlock(configString, reRouteMap)
+	routeMapsBlock, err := extractBlock(configString, reRouteMap, "OTHER")
 	if err != nil {
 		fmt.Println("Error extracting route-map block:", err)
 		return err
@@ -73,7 +74,7 @@ func (p *Parser) ParseConfig() error {
 	// IP Access-list
 	regexIPAccessList := `^\s*ip access-list .+$`
 	reIPAccessList := regexp.MustCompile(regexIPAccessList)
-	IPAccessListsBlock, err := extractBlock(configString, reIPAccessList)
+	IPAccessListsBlock, err := extractBlock(configString, reIPAccessList, "OTHER")
 	if err != nil {
 		fmt.Println("Error extracting ip access-list block:", err)
 		return err
@@ -81,30 +82,55 @@ func (p *Parser) ParseConfig() error {
 	IPAccessListObj := net.ParseIPAccessListBlock(IPAccessListsBlock)
 	configs.IPAccessLists = IPAccessListObj
 
+	// IP Prefix-list
+	regexIPPrefixList := `^\s*ip prefix-list .+$`
+	reIPPrefixList := regexp.MustCompile(regexIPPrefixList)
+	IPPrefixListsBlock, err := extractBlock(configString, reIPPrefixList, "IP_PREFIX_LIST")
+	if err != nil {
+		fmt.Println("Error extracting ip access-list block:", err)
+		return err
+	}
+	IPPrefixListObj := net.ParseIPPrefixListBlock(IPPrefixListsBlock)
+	configs.IPPrefixLists = IPPrefixListObj
+
 	// Set configs to parser object
 	p.Configs = configs
 
 	return nil
 }
 
-func extractBlock(s string, re *regexp.Regexp) ([]string, error) {
+func extractBlock(s string, re *regexp.Regexp, feature string) ([]string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(s))
 	var block, blocks []string
+	count := 1
+	currentLine := ""
 	for scanner.Scan() {
-		line := scanner.Text()
-		if block == nil && re.MatchString(line) {
-			block = append(block, line)
-		} else if block != nil && strings.HasPrefix(line, " ") {
-			block = append(block, line)
-		} else if block != nil && re.MatchString(line) {
+		count++;
+		prevLine := currentLine
+		currentLine = scanner.Text()
+		// line := scanner.Text()
+		if block == nil && re.MatchString(currentLine) {
+			// first instance match of the line
+			block = append(block, currentLine)
+		} else if block != nil && strings.HasPrefix(currentLine, " ") {
+			// if the line has prefix of space character
+			block = append(block, currentLine)
+		} else if block != nil && re.MatchString(currentLine) {
+			// not the first instance match of the line
+			if prevLine != "!" && feature == "IP_PREFIX_LIST" {
+				block = append(block, currentLine)
+				continue
+			}
 			blocks = append(blocks, strings.Join(block, "\n"))
 			block = nil
-			block = append(block, line)
-		} else if block != nil && !strings.HasPrefix(line, " ") {
+			block = append(block, currentLine)
+		} else if block != nil && !strings.HasPrefix(currentLine, " ") {
+			// if the line doesn't has prefix of space character
 			blocks = append(blocks, strings.Join(block, "\n"))
 			block = nil
 		}
 	}
+	// fmt.Printf("extractBlock function count: %v \n", count)
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
