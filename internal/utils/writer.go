@@ -9,7 +9,7 @@ import (
 	"github.com/opennetworktools/NetConfigParser/internal/parser"
 )
 
-func WriteParserStructToJSON(data *parser.Parser, outFileName string) error {
+func WriteParserStructToJSON(data *parser.Configs, outFileName string) error {
 	// Create the "out" directory if it doesn't exist
 	outDir := "out"
 	err := os.MkdirAll(outDir, os.ModePerm)
