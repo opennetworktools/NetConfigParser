@@ -1,0 +1,93 @@
+! Current configuration : 4275 bytes
+! Last configuration change at 14:23:48 UTC Sat Oct 14 2023
+! NVRAM config last updated at 14:23:49 UTC Sat Oct 14 2023
+version 17.3
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+hostname Switch1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+no aaa new-model
+!
+!
+aaa session-id common
+!
+!
+!
+!
+ip domain name example.com
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+vlan 10
+ name Users
+!
+vlan 20
+ name Servers
+!
+vlan 30
+ name Management
+!
+!
+interface GigabitEthernet1/0/1
+ description Uplink to Core Router
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30
+ no shutdown
+!
+interface GigabitEthernet1/0/2
+ description Connection to User PC
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+!
+interface Vlan1
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+!
+interface GigabitEthernet1/0/3
+ ip address 192.168.10.2 255.255.255.0
+ ip nat inside
+ no shutdown
+!
+interface GigabitEthernet1/0/4
+ ip address 203.0.113.2 255.255.255.0
+ ip nat outside
+ no shutdown
+!
+router ospf 1
+ router-id 1.1.1.1
+ network 192.168.10.0 0.0.0.255 area 0
+!
+ip nat inside source static 192.168.10.100 203.0.113.100
+!
+ip access-list extended INTERNET-ACCESS
+ permit tcp any any eq 80
+ permit tcp any any eq 443
+ deny ip any any log
+!
+ip route 0.0.0.0 0.0.0.0 192.168.1.254
+!
+ip prefix-list TEST-PL permit 192.168.0.0/16 le 24
+!
+snmp-server community public RO
+!
+banner login ^CUnauthorized access is prohibited. Please disconnect immediately.^C
+!
+line con 0
+line vty 0 4
+ login
+ transport input ssh
+!
+end
+
