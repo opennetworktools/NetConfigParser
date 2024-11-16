@@ -24,15 +24,6 @@ type ConfigParser interface {
    ParseIPPrefixListBlock([] string) []net.PrefixList
 }
 
-func GetParser(osType, path string) ConfigParser {
-   switch osType {
-   case "IOSXE":
-       return NewIOSXEParser(path)
-   default:
-       return nil
-   }
-}
-
 func NewIOSXEParser(path string) *IOSXEParser {
    return &IOSXEParser{
        FilePath: path,

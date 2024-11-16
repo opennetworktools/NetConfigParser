@@ -1,4 +1,4 @@
-package utils
+package netconfigparser
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/opennetworktools/NetConfigParser/internal/parser"
 )
 
-func WriteParserStructToJSON(data *parser.Configs, outFileName string) error {
+func WriteConfigStructToJSON(data *parser.Configs, outFileName string) error {
 	// Create the "out" directory if it doesn't exist
 	outDir := "out"
 	err := os.MkdirAll(outDir, os.ModePerm)
