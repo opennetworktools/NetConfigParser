@@ -1,6 +1,27 @@
 # NetConfigParser
 
-NetConfigParser is a tool that parses your network device's startup or running configurations.
+NetConfigParser is a tool that parses your network device's startup or running configurations. It currently supports Cisco IOS-XE, with more features under development. Support for the Arista EOS is also in queue.
+
+## Getting Started
+
+Add the `NetConfigParser` package in your project,
+
+```
+go get github.com/opennetworktools/NetConfigParser
+```
+
+Import the package in your project,
+
+```
+import (
+	netconfigparser "github.com/opennetworktools/NetConfigParser"
+)
+```
+
+Refer [example/main.go](example/main.go) to know how to parse your running/startup configs.
+
+> [!NOTE]
+> NetConfigParser is under development. Feel free to go through the open issues and contribute to help us speed up the development.
 
 ## Design
 
