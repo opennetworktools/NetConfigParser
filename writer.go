@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/opennetworktools/NetConfigParser/internal/parser"
 )
 
-func WriteConfigStructToJSON(data *parser.Configs, outFileName string) error {
+func WriteConfigStructToJSON(data any, outFileName string) error {
 	// Create the "out" directory if it doesn't exist
 	outDir := "out"
 	err := os.MkdirAll(outDir, os.ModePerm)

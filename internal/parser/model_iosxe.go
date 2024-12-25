@@ -20,6 +20,10 @@ func (p *IOSXEParser) GetConfigs() *Configs {
    return &p.Configs
 }
 
+func (p *IOSXEParser) GetFeatures() *[]string {
+    return &p.Features
+}
+
 func (p *IOSXEParser) PrintParserType() {
    fmt.Println("Cisco IOS-XE")
 }
@@ -36,6 +40,10 @@ func (p *IOSXEParser) ParseConfig() error {
    configString := string(content)
 
    configs := Configs{}
+
+   // Metadata
+   metadataObject := p.ParseMetadata(configString)
+   configs.Metadata = metadataObject
 
    // BGP block
    reBGP := regexp.MustCompile(`(?s)router bgp.*?!\n`)
@@ -67,6 +75,9 @@ func (p *IOSXEParser) ParseConfig() error {
    }
    routeMapsObj := p.ParseRouteMapBlock(routeMapsBlock)
    configs.RouteMaps = routeMapsObj
+   if len(routeMapsObj) > 0 {
+    p.Features = append(p.Features, "Route-Map")
+   }
 
    // IP Access-list
    regexIPAccessList := `^\s*ip access-list .+$`
@@ -78,6 +89,9 @@ func (p *IOSXEParser) ParseConfig() error {
    }
    IPAccessListObj := p.ParseIPAccessListBlock(IPAccessListsBlock)
    configs.IPAccessLists = IPAccessListObj
+   if len(IPAccessListObj) > 0 {
+    p.Features = append(p.Features, "IP Access List")
+   }
 
    // IP Prefix-list
 	regexIPPrefixList := `^\s*ip prefix-list .+$`
@@ -89,6 +103,9 @@ func (p *IOSXEParser) ParseConfig() error {
 	}
 	IPPrefixListObj := p.ParseIPPrefixListBlock(IPPrefixListsBlock)
 	configs.IPPrefixLists = IPPrefixListObj
+    if len(IPPrefixListObj) > 0 {
+        p.Features = append(p.Features, "Prefix List")
+    }
 
    // Set configs to parser object
    p.Configs = configs
@@ -449,4 +466,39 @@ func (p *IOSXEParser) ParseIPPrefixListBlock(blocks []string) []net.PrefixList {
         prefixLists = append(prefixLists, prefixListObj)
     }
     return prefixLists
+}
+
+// TODO
+func (p *IOSXEParser) ParseMetadata(s string) net.Metadata {
+	// MetaData:
+	// time source, hostname, version, current configuration bytes, last updated, last updated in NVRAM
+	fmt.Println("Parse Metadata!")
+
+	regexLastModified := `^! Last configuration change at (.+) by (\S+)`
+	reLastModified := regexp.MustCompile(regexLastModified)
+
+	regexHostname := `^hostname\s+(\S+)`
+	reHostname := regexp.MustCompile(regexHostname)
+
+	regexVersion := `^version\s+(\S+)`
+	reVersion := regexp.MustCompile(regexVersion)
+
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	currentLine := ""
+
+	metadata := net.Metadata{}
+	for scanner.Scan() {
+		// prevLine := currentLine
+		currentLine = scanner.Text()
+		if matches := reLastModified.FindStringSubmatch(currentLine); matches != nil {
+			metadata.LastModified = matches[1]
+			metadata.LastModifiedUser = matches[2]
+		} else if matches := reHostname.FindStringSubmatch(currentLine); matches != nil {
+			metadata.Hostname = matches[1]
+		} else if matches := reVersion.FindStringSubmatch(currentLine); matches != nil {
+			metadata.Version = matches[1]
+		}
+	}
+
+	return metadata
 }

@@ -5,6 +5,7 @@ import (
 )
 
 type Configs struct {
+   Metadata      net.Metadata
    BGP           net.BGP
    Interfaces    net.Interfaces
    RouteMaps     []net.RouteMap
@@ -15,6 +16,7 @@ type Configs struct {
 type ConfigParser interface {
    GetConfigs() *Configs
    PrintParserType()
+   ParseMetadata(string) net.Metadata
    ParseConfig() error
    ParseBGPBlock(string) net.BGP
    ParseInterfacesBlock([]string) net.Interfaces
