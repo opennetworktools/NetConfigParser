@@ -15,7 +15,7 @@ func main() {
 		log.Fatalf("Unsupported OS type: %s", osType)
 	}
 	parser.ParseConfig()
- 
+
 	// err := netconfigparser.WriteConfigStructToJSON(parser.GetConfigs(), "out/config.json")
 	err := netconfigparser.WriteConfigStructToJSON(parser, "out/parser.json")
 	if err != nil {

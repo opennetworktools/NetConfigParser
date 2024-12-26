@@ -6,5 +6,5 @@ type EOSParser struct {
 }
 
 func (p *EOSParser) PrintParserType() {
-   fmt.Println("Arista EOS")
+	fmt.Println("Arista EOS")
 }
